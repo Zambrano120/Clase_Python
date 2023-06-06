@@ -1,0 +1,117 @@
+import sys
+import pygame
+import random
+
+pygame.init()
+
+size = (1280, 720)
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption("PRINCESAS DEL CAOS ELEMENTAL")
+clock = pygame.time.Clock()
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+
+BKGNFONDO = pygame.image.load("ooooooooo.jpg")
+BKGNTIERRA = pygame.image.load("tierracaravana.jpg")
+BKGNFUEGO = pygame.image.load("fuegocaravana.jpg")
+BKGNAIRE = pygame.image.load("airecaravana.jpg")
+BKGNAGUA = pygame.image.load("aguacaravana.jpg")
+
+jugador_puntos = 0
+intentos_restantes = 3
+
+def get_font(size):
+    return pygame.font.Font(None, size)
+
+def dibujar_boton_continuar():
+    font = get_font(30)
+    texto = font.render("CONTINUAR", True, WHITE)
+    boton_rect = texto.get_rect()
+    boton_rect.center = (size[0] // 2, size[1] - 50)
+    screen.blit(texto, boton_rect)
+    return boton_rect
+
+def mostrar_resultado(ganador):
+    if ganador:
+        img_resultado = pygame.image.load("ganaste.jpg")
+    else:
+        img_resultado = pygame.image.load("perdiste.jpg")
+    screen.blit(img_resultado, (0, 0))
+    pygame.display.flip()
+    pygame.time.wait(2000)
+
+jugador_seleccionado = False
+cartas_disponibles = [BKGNTIERRA, BKGNFUEGO, BKGNAIRE, BKGNAGUA]
+carta1 = random.choice(cartas_disponibles)
+cartas_disponibles.remove(carta1)
+carta2 = random.choice(cartas_disponibles)
+
+def play():
+  global jugador_seleccionado, cartas_disponibles, carta1, carta2, jugador_puntos, intentos_restantes, carta1_rect, carta2_rect, boton_continuar_rect
+  while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN and not jugador_seleccionado:
+
+            mouse_pos = pygame.mouse.get_pos()
+            if carta1_rect.collidepoint(mouse_pos):
+                jugador_seleccionado = True
+                if carta1 == BKGNTIERRA:
+                    intentos_restantes -= 1
+                else:
+                    jugador_puntos += 10
+            elif carta2_rect.collidepoint(mouse_pos):
+                jugador_seleccionado = True
+                if carta2 == BKGNTIERRA:
+                    intentos_restantes -= 1
+                else:
+                    jugador_puntos += 10
+        elif event.type == pygame.MOUSEBUTTONDOWN and jugador_seleccionado:
+            
+            mouse_pos = pygame.mouse.get_pos()
+            if boton_continuar_rect.collidepoint(mouse_pos):
+                jugador_seleccionado = False
+                if intentos_restantes > 0:
+                    if len(cartas_disponibles) < 2:
+                        cartas_disponibles = [BKGNTIERRA, BKGNFUEGO, BKGNAIRE, BKGNAGUA]
+                    carta1 = random.choice(cartas_disponibles)
+                    cartas_disponibles.remove(carta1)
+                    carta2 = random.choice(cartas_disponibles)
+                else:
+                    intentos_restantes = 3
+                    jugador_puntos = 0
+                    carta1 = random.choice(cartas_disponibles)
+                    cartas_disponibles.remove(carta1)
+                    carta2 = random.choice(cartas_disponibles)
+
+   
+    screen.blit(BKGNFONDO, (0, 0))
+
+    screen_center = (size[0] // 2, size[1] // 2)
+
+    carta1_pos = (screen_center[0] - carta1.get_width() // 2 - 200, screen_center[1] - carta1.get_height() // 2)
+    carta2_pos = (screen_center[0] + carta2.get_width() // 2 + 200, screen_center[1] - carta2.get_height() // 2)
+
+    carta1_rect = screen.blit(carta1, carta1_pos)
+    carta2_rect = screen.blit(carta2, carta2_pos)
+
+    boton_continuar_rect = dibujar_boton_continuar()
+
+    font = get_font(30)
+    texto_puntos = font.render("Puntos: " + str(jugador_puntos), True, WHITE)
+    texto_intentos = font.render("Intentos restantes: " + str(intentos_restantes), True, WHITE)
+    screen.blit(texto_puntos, (20, 20))
+    screen.blit(texto_intentos, (20, 60))
+
+    if intentos_restantes == 0:
+        mostrar_resultado(False)
+
+    if jugador_puntos >= 60:
+        mostrar_resultado(True)
+
+    pygame.display.flip()
+    clock.tick(60)
